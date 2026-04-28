@@ -1,4 +1,4 @@
-import { auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, browserPopupRedirectResolver } from './firebase.js';
+import { auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, browserPopupRedirectResolver, signInAnonymously } from './firebase.js';
 
 const provider = new GoogleAuthProvider();
 
@@ -14,19 +14,27 @@ export function initAuth(onUserLogged) {
             floatingAddBtn.classList.remove('hidden');
             
             // Update UI with user info
-            document.getElementById('user-name').textContent = user.displayName;
-            document.getElementById('user-email').textContent = user.email;
-            document.getElementById('user-avatar').src = user.photoURL || 'https://via.placeholder.com/40';
-            document.getElementById('settings-name').textContent = user.displayName;
-            document.getElementById('settings-email').textContent = user.email;
-            document.getElementById('settings-avatar').src = user.photoURL || 'https://via.placeholder.com/40';
-            document.getElementById('welcome-name').textContent = user.displayName.split(' ')[0];
+            const name = user.displayName || 'Guest User';
+            const email = user.email || 'Temporary Account';
+            const photo = user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=1d9e75&color=0a2e24`;
+
+            document.getElementById('user-name').textContent = name;
+            document.getElementById('user-email').textContent = email;
+            document.getElementById('user-avatar').src = photo;
+            document.getElementById('settings-name').textContent = name;
+            document.getElementById('settings-email').textContent = email;
+            document.getElementById('settings-avatar').src = photo;
+            document.getElementById('welcome-name').textContent = name.split(' ')[0];
 
             if (onUserLogged) onUserLogged(user);
         } else {
-            authContainer.classList.remove('hidden');
-            appContainer.classList.add('hidden');
-            floatingAddBtn.classList.add('hidden');
+            // Auto-sign in anonymously if not logged in
+            signInAnonymously(auth).catch((error) => {
+                console.error("Anonymous auth failed", error);
+                authContainer.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+                floatingAddBtn.classList.add('hidden');
+            });
         }
     });
 

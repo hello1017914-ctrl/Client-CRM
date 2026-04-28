@@ -48,5 +48,6 @@ export {
     signInWithPopup, 
     signOut, 
     onAuthStateChanged,
-    browserPopupRedirectResolver
+    browserPopupRedirectResolver,
+    signInAnonymously
 } from 'https://www.gstatic.com/firebasejs/9.22.1/firebase-auth.js';
