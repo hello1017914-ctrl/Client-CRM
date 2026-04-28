@@ -1,0 +1,72 @@
+{
+  "entities": {
+    "prospect": {
+      "title": "Prospect",
+      "description": "A potential client for outreach.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner of the prospect record" },
+        "name": { "type": "string", "description": "Full Name or Brand Name" },
+        "instagramHandle": { "type": "string", "description": "@username" },
+        "platform": { "type": "string", "enum": ["Instagram", "LinkedIn", "Email", "WhatsApp", "TikTok"] },
+        "followerCount": { "type": "number" },
+        "niche": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "websiteUrl": { "type": "string", "format": "uri" },
+        "tiktokHandle": { "type": "string" },
+        "youtubeChannel": { "type": "string" },
+        "templateUsed": { "type": "string", "enum": ["Template 1", "Template 2", "Template 3", "Template 4", "Custom Email"] },
+        "datePitched": { "type": "string", "format": "date" },
+        "status": { "type": "string", "enum": ["Cold", "Replied", "Sample Sent", "Call Booked", "Paid", "Dead"] },
+        "followedUp": { "type": "boolean" },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "instagramHandle", "platform", "datePitched", "status"]
+    },
+    "weeklyReview": {
+      "title": "Weekly Review",
+      "description": "Weekly outreach summary and targets.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "weekStartDate": { "type": "string", "format": "date" },
+        "dmsSent": { "type": "number" },
+        "repliesReceived": { "type": "number" },
+        "samplesSent": { "type": "number" },
+        "clientsConverted": { "type": "number" },
+        "revenue": { "type": "number" },
+        "whatWorked": { "type": "string" },
+        "whatDidnt": { "type": "string" },
+        "nextWeekTarget": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "weekStartDate"]
+    },
+    "setting": {
+      "title": "User Settings",
+      "description": "User specific preferences.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "followUpWindow": { "type": "number", "description": "Days for follow up reminder" }
+      },
+      "required": ["userId"]
+    }
+  },
+  "firestore": {
+    "/prospects/{prospectId}": {
+      "schema": "prospect",
+      "description": "Collection of outreach prospects."
+    },
+    "/weeklyReviews/{reviewId}": {
+      "schema": "weeklyReview",
+      "description": "Collection of weekly summaries."
+    },
+    "/settings/{userId}": {
+      "schema": "setting",
+      "description": "User settings document."
+    }
+  }
+}

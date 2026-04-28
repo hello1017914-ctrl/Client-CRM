@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. Prospects
+    match /prospects/{prospectId} {
+      function isValidProspect(data) {
+        return data.userId == request.auth.uid
+          && data.name is string && data.name.size() > 0 && data.name.size() <= 200
+          && data.instagramHandle is string && data.instagramHandle.size() > 0
+          && data.platform in ["Instagram", "LinkedIn", "Email", "WhatsApp", "TikTok"]
+          && data.status in ["Cold", "Replied", "Sample Sent", "Call Booked", "Paid", "Dead"]
+          && (data.get('followerCount', 0) is number)
+          && (data.get('email', '') is string)
+          && (data.get('websiteUrl', '') is string)
+          && (data.get('niche', '') is string)
+          && (data.get('followedUp', false) is bool)
+          && (data.datePitched is string);
+      }
+
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidProspect(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidProspect(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // 2. Weekly Reviews
+    match /weeklyReviews/{reviewId} {
+      function isValidReview(data) {
+        return data.userId == request.auth.uid
+          && data.weekStartDate is string
+          && (data.get('dmsSent', 0) is number)
+          && (data.get('repliesReceived', 0) is number)
+          && (data.get('samplesSent', 0) is number)
+          && (data.get('clientsConverted', 0) is number)
+          && (data.get('revenue', 0) is number)
+          && (data.get('nextWeekTarget', 0) is number);
+      }
+
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && isValidReview(incoming()) && incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && existing().userId == request.auth.uid && isValidReview(incoming()) && incoming().userId == request.auth.uid;
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // 3. User Settings
+    match /settings/{userId} {
+      function isValidSetting(data) {
+        return data.userId == userId
+          && data.userId == request.auth.uid
+          && (data.get('followUpWindow', 3) is number);
+      }
+
+      allow get: if isSignedIn() && userId == request.auth.uid;
+      allow create, update: if isSignedIn() && userId == request.auth.uid && isValidSetting(incoming());
+      allow delete: if isSignedIn() && userId == request.auth.uid;
+    }
+  }
+}

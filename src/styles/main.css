@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-bg: #0a2e24;
+  --color-brand-card: #0f3d2e;
+  --color-brand-accent: #1d9e75;
+  --color-brand-text: #ffffff;
+  --color-brand-muted: #5dcaa5;
+  --color-brand-border: #1a4a38;
+  --color-brand-sidebar: #061a12;
+  --shadow-custom: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-accent: 0 10px 15px -3px rgba(29, 158, 117, 0.2), 0 4px 6px -4px rgba(29, 158, 117, 0.2);
+}
+
+:root {
+  background-color: var(--color-brand-bg);
+  color: var(--color-brand-text);
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+.custom-shadow {
+  box-shadow: var(--shadow-custom);
+}
+
+.accent-shadow {
+  box-shadow: var(--shadow-accent);
+}
+
+.status-badge {
+  @apply px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 w-fit;
+}
+
+.status-cold { @apply bg-blue-500/20 text-blue-300; }
+.status-replied { @apply bg-yellow-500/20 text-yellow-300; }
+.status-sample { @apply bg-orange-500/20 text-orange-300; }
+.status-call { @apply bg-purple-500/20 text-purple-300; }
+.status-paid { @apply bg-green-500/20 text-green-300; }
+.status-dead { @apply bg-red-500/20 text-red-300; }
+
+.follow-up-overdue {
+  @apply bg-red-500/5 border-red-500/20;
+}
+
+.paid-row {
+  @apply bg-green-500/5 border-green-500/20;
+}
+
+/* Metric Cards */
+.metric-card {
+  @apply bg-brand-card border border-brand-border p-5 rounded-2xl transition-all duration-200 hover:border-brand-accent/50;
+}
+
+.metric-card-overdue {
+  @apply border-l-4 border-l-red-600;
+}
+
+/* Sidebar transitions */
+.nav-item {
+  @apply flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 text-brand-muted hover:text-white hover:bg-brand-border font-medium;
+}
+
+.nav-item.active {
+  @apply bg-brand-accent text-[#0a2e24] font-bold;
+}
+
+/* Table Headers */
+.table-header-sleek {
+  @apply sticky top-0 bg-brand-card border-b border-brand-border text-brand-muted text-[10px] uppercase font-bold tracking-widest px-6 py-3;
+}
+
+/* Drawer */
+.drawer {
+  @apply fixed right-0 top-0 h-full w-full max-w-md bg-brand-bg border-l border-brand-border z-50 transform transition-transform duration-300 translate-x-full;
+  box-shadow: var(--shadow-custom);
+}
+
+.drawer.open {
+  @apply translate-x-0;
+}
+
+.overlay {
+  @apply fixed inset-0 bg-black/60 z-40 hidden;
+}
+
+.overlay.show {
+  @apply block;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-brand-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-brand-sidebar);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-brand-card);
+}

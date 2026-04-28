@@ -1,0 +1,499 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CopyQuill CRM | Personal Outreach Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body class="bg-brand-bg text-brand-text">
+    <div id="auth-container" class="fixed inset-0 flex flex-col items-center justify-center z-[100] bg-brand-bg">
+        <div class="text-center space-y-6 max-w-sm px-6">
+            <div class="inline-flex items-center justify-center p-4 rounded-2xl bg-brand-accent/20 text-brand-accent mb-4">
+                <i data-lucide="quill" class="w-12 h-12"></i>
+            </div>
+            <h1 class="text-4xl font-bold tracking-tight">CopyQuill CRM</h1>
+            <p class="text-brand-muted text-lg">Your elite personal outreach command center.</p>
+            <button id="login-btn" class="w-full flex items-center justify-center gap-3 bg-white text-brand-bg font-semibold py-4 rounded-xl hover:bg-brand-muted transition-colors cursor-pointer border-none">
+                <img src="https://www.google.com/favicon.ico" class="w-5 h-5" alt="Google">
+                Sign in with Google
+            </button>
+        </div>
+    </div>
+
+    <div id="app-container" class="hidden min-h-screen flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-brand-sidebar border-r border-brand-border flex flex-col h-auto md:h-screen sticky top-0 z-30">
+            <div class="p-6 flex items-center gap-3">
+                <div class="w-8 h-8 bg-brand-accent rounded-lg flex items-center justify-center text-brand-bg">
+                    <i data-lucide="quill" class="w-5 h-5"></i>
+                </div>
+                <span class="text-xl font-bold tracking-tight uppercase">CopyQuill</span>
+            </div>
+            
+            <nav class="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+                <a href="#" data-page="dashboard" class="nav-item active">
+                    <i data-lucide="layout-dashboard"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" data-page="prospects" class="nav-item">
+                    <i data-lucide="users"></i>
+                    <span>Prospects</span>
+                </a>
+                <a href="#" data-page="followups" class="nav-item">
+                    <i data-lucide="clock"></i>
+                    <span>Follow Ups</span>
+                    <span id="followup-count-badge" class="ml-auto bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full hidden">0</span>
+                </a>
+                <a href="#" data-page="review" class="nav-item">
+                    <i data-lucide="bar-chart-3"></i>
+                    <span>Weekly Review</span>
+                </a>
+                <a href="#" data-page="settings" class="nav-item">
+                    <i data-lucide="settings"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <div class="p-4 border-t border-brand-border">
+                <div id="user-profile" class="flex items-center gap-3 mb-4">
+                    <img src="" id="user-avatar" class="w-10 h-10 rounded-full border border-brand-border" alt="Avatar">
+                    <div class="flex-1 overflow-hidden">
+                        <p id="user-name" class="font-medium truncate text-sm">User Name</p>
+                        <p id="user-email" class="text-xs text-brand-muted truncate">email@example.com</p>
+                    </div>
+                </div>
+                <button id="logout-btn" class="w-full flex items-center justify-center gap-2 py-2 text-sm text-red-400 hover:text-red-300 transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i>
+                    Sign Out
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 md:p-8 overflow-x-hidden">
+            <div id="page-content" class="max-w-6xl mx-auto">
+                <!-- Dashboard Page -->
+                <div id="page-dashboard" class="space-y-8">
+                    <header>
+                        <h2 class="text-2xl font-bold">Good morning, <span id="welcome-name" class="text-brand-accent">Freelancer</span></h2>
+                        <p class="text-brand-muted">Here's your outreach performance at a glance.</p>
+                    </header>
+
+                    <!-- Metric Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="metric-card">
+                            <p class="text-brand-muted text-[10px] font-bold uppercase tracking-wider mb-1">Total Pitched</p>
+                            <h3 id="stat-total-pitched" class="text-3xl font-bold">0</h3>
+                        </div>
+                        <div class="metric-card">
+                            <p class="text-brand-muted text-[10px] font-bold uppercase tracking-wider mb-1">Replied</p>
+                            <h3 id="stat-replied" class="text-3xl font-bold">0</h3>
+                        </div>
+                        <div class="metric-card metric-card-overdue">
+                            <p class="text-brand-muted text-[10px] font-bold uppercase tracking-wider mb-1">Awaiting Follow Up</p>
+                            <h3 id="stat-awaiting" class="text-3xl font-bold">0</h3>
+                        </div>
+                        <div class="metric-card">
+                            <p class="text-brand-muted text-[10px] font-bold uppercase tracking-wider mb-1">Converted / Paid</p>
+                            <h3 id="stat-converted" class="text-3xl font-bold">0</h3>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Reply Rate -->
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border lg:col-span-1 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-brand-muted font-medium mb-6">Reply Rate</h4>
+                            <div class="relative w-32 h-32 flex items-center justify-center">
+                                <svg class="w-full h-full transform -rotate-90">
+                                    <circle cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" class="text-brand-border" />
+                                    <circle id="reply-rate-circle" cx="64" cy="64" r="58" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="364.4" stroke-dashoffset="364.4" class="text-brand-accent transition-all duration-1000" />
+                                </svg>
+                                <span id="reply-rate-percent" class="absolute text-2xl font-bold">0%</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Weekly Chart -->
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border lg:col-span-2">
+                            <h4 class="text-brand-muted font-medium mb-4">Weekly Breakdown</h4>
+                            <div class="h-48">
+                                <canvas id="weeklyChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Status Distribution -->
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border">
+                            <h4 class="text-brand-muted font-medium mb-4">Status Distribution</h4>
+                            <div class="h-64 flex items-center justify-center">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border">
+                            <h4 class="text-brand-muted font-medium mb-4">Recent Activity</h4>
+                            <div class="space-y-4" id="recent-activity-list">
+                                <!-- Activity items -->
+                                <p class="text-center py-8 text-brand-muted">No activity yet.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prospects Page -->
+                <div id="page-prospects" class="hidden space-y-6">
+                    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight">Prospects</h2>
+                            <p class="text-brand-muted text-sm">Manage your complete outreach database.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="bulk-followup-btn" class="hidden px-4 py-2 bg-brand-card border border-brand-border rounded-lg text-sm font-medium hover:bg-brand-border">Mark Followed Up</button>
+                            <button id="bulk-delete-btn" class="hidden px-4 py-2 bg-red-900/30 border border-red-500/30 text-red-100 rounded-lg text-sm font-medium hover:bg-red-900/50">Delete Selected</button>
+                            <button id="header-add-prospect" class="px-4 py-2 bg-brand-accent text-brand-bg rounded-lg text-sm font-bold accent-shadow">+ Add Prospect</button>
+                        </div>
+                    </header>
+
+                    <!-- Filters -->
+                    <div class="bg-brand-sidebar p-4 rounded-xl border border-brand-border flex flex-col md:flex-row gap-4 items-center">
+                        <div class="relative flex-1 w-full">
+                            <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-brand-muted"></i>
+                            <input type="text" id="prospect-search" placeholder="Search by name or handle..." class="w-full pl-10 pr-4 py-2 bg-brand-bg border border-brand-border rounded-lg focus:outline-none focus:border-brand-accent text-sm">
+                        </div>
+                        <select id="filter-status" class="bg-brand-bg border border-brand-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-brand-accent w-full md:w-auto">
+                            <option value="">All Statuses</option>
+                            <option value="Cold">🔵 Cold</option>
+                            <option value="Replied">🟡 Replied</option>
+                            <option value="Sample Sent">🟠 Sample Sent</option>
+                            <option value="Call Booked">🟣 Call Booked</option>
+                            <option value="Paid">🟢 Paid</option>
+                            <option value="Dead">🔴 Dead</option>
+                        </select>
+                        <select id="filter-platform" class="bg-brand-bg border border-brand-border rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-brand-accent w-full md:w-auto">
+                            <option value="">All Platforms</option>
+                            <option value="Instagram">Instagram</option>
+                            <option value="LinkedIn">LinkedIn</option>
+                            <option value="Email">Email</option>
+                            <option value="WhatsApp">WhatsApp</option>
+                            <option value="TikTok">TikTok</option>
+                        </select>
+                    </div>
+
+                    <!-- Table Container -->
+                    <div class="bg-brand-sidebar rounded-xl border border-brand-border overflow-x-auto min-h-[400px]">
+                        <table class="w-full text-left text-sm border-collapse">
+                            <thead class="text-brand-muted">
+                                <tr>
+                                    <th class="table-header-sleek w-10"><input type="checkbox" id="select-all-prospects"></th>
+                                    <th class="table-header-sleek cursor-pointer hover:text-white" data-sort="name">Name <i data-lucide="chevron-down" class="inline w-3 h-3"></i></th>
+                                    <th class="table-header-sleek hidden md:table-cell" data-sort="instagramHandle">Handle</th>
+                                    <th class="table-header-sleek hidden lg:table-cell" data-sort="platform">Platform</th>
+                                    <th class="table-header-sleek hidden lg:table-cell" data-sort="niche">Niche</th>
+                                    <th class="table-header-sleek" data-sort="status">Status</th>
+                                    <th class="table-header-sleek">Follow Up</th>
+                                    <th class="table-header-sleek text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="prospects-table-body" class="divide-y divide-brand-border">
+                                <!-- Rows will be injected here -->
+                                <tr>
+                                    <td colspan="8" class="p-12 text-center text-brand-muted">
+                                        <div class="flex flex-col items-center gap-4">
+                                            <i data-lucide="users" class="w-12 h-12 opacity-20"></i>
+                                            <p>No prospects yet. Add your first one →</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="flex items-center justify-between px-4">
+                        <p class="text-xs text-brand-muted">Showing page <span id="current-page">1</span></p>
+                        <div class="flex gap-2">
+                            <button id="prev-page" class="p-2 border border-brand-border rounded-lg disabled:opacity-50"><i data-lucide="chevron-left" class="w-4 h-4"></i></button>
+                            <button id="next-page" class="p-2 border border-brand-border rounded-lg disabled:opacity-50"><i data-lucide="chevron-right" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Follow Up Page -->
+                <div id="page-followups" class="hidden space-y-6">
+                    <header>
+                        <h2 class="text-2xl font-bold">Follow Up Queue</h2>
+                        <p id="followup-heading" class="text-brand-muted">Loading your queue...</p>
+                    </header>
+
+                    <div id="followup-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Cards will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Weekly Review Page -->
+                <div id="page-review" class="hidden space-y-8">
+                    <header>
+                        <h2 class="text-2xl font-bold">Weekly Review</h2>
+                        <p class="text-brand-muted">Analyze your performance and set next week's targets.</p>
+                    </header>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Form -->
+                        <div class="lg:col-span-2 bg-brand-sidebar p-6 rounded-2xl border border-brand-border space-y-6">
+                            <h3 class="text-lg font-bold">Log This Week's Performance</h3>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">DMs Sent</label>
+                                    <input type="number" id="rev-dms" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">Replies</label>
+                                    <input type="number" id="rev-replies" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">Samples</label>
+                                    <input type="number" id="rev-samples" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">Paid Clients</label>
+                                    <input type="number" id="rev-clients" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">Revenue Logged ($)</label>
+                                    <input type="number" id="rev-revenue" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">What worked?</label>
+                                    <textarea id="rev-worked" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent h-24"></textarea>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">What didn't?</label>
+                                    <textarea id="rev-didnt" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent h-24"></textarea>
+                                </div>
+                                <div class="space-y-1">
+                                    <label class="text-xs text-brand-muted">Next week DM target</label>
+                                    <input type="number" id="rev-target" class="w-full bg-brand-bg border border-brand-border rounded px-3 py-2 text-sm focus:outline-none focus:border-brand-accent">
+                                </div>
+                            </div>
+                            <button id="save-review-btn" class="w-full py-3 bg-brand-accent text-white font-bold rounded-xl hover:opacity-90 transition-opacity">Save Weekly Review</button>
+                        </div>
+                    </div>
+
+                    <!-- History -->
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-bold">Previous Reviews</h3>
+                        <div id="review-history" class="space-y-4">
+                            <!-- Review cards -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Page -->
+                <div id="page-settings" class="hidden space-y-8">
+                    <header>
+                        <h2 class="text-2xl font-bold">Settings</h2>
+                        <p class="text-brand-muted">Customize your CRM experience.</p>
+                    </header>
+
+                    <div class="max-w-xl space-y-6">
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border space-y-4">
+                            <h3 class="font-bold flex items-center gap-2"><i data-lucide="user" class="w-4 h-4"></i> Profile</h3>
+                            <div class="flex items-center gap-4">
+                                <img src="" id="settings-avatar" class="w-16 h-16 rounded-full" alt="User">
+                                <div>
+                                    <p id="settings-name" class="text-lg font-bold">Name</p>
+                                    <p id="settings-email" class="text-brand-muted">Email</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border space-y-4">
+                            <h3 class="font-bold flex items-center gap-2"><i data-lucide="bell" class="w-4 h-4"></i> Outreach Preferences</h3>
+                            <div class="space-y-2">
+                                <label class="text-sm text-brand-muted">Default follow up window (days)</label>
+                                <div class="flex items-center gap-4">
+                                    <input type="number" id="setting-followup-window" value="3" class="bg-brand-bg border border-brand-border rounded px-3 py-2 w-24 text-sm focus:outline-none focus:border-brand-accent">
+                                    <button id="save-settings-btn" class="px-4 py-2 bg-brand-accent text-white text-sm rounded-lg">Save</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-brand-sidebar p-6 rounded-2xl border border-brand-border space-y-4">
+                            <h3 class="font-bold flex items-center gap-2"><i data-lucide="database" class="w-4 h-4"></i> Data Management</h3>
+                            <div class="grid grid-cols-2 gap-4">
+                                <button id="export-csv-btn" class="flex items-center justify-center gap-2 px-4 py-3 bg-brand-card border border-brand-border rounded-xl text-sm hover:bg-brand-sidebar transition-all">
+                                    <i data-lucide="download" class="w-4 h-4"></i>
+                                    Export CSV
+                                </button>
+                                <button id="import-csv-trigger" class="flex items-center justify-center gap-2 px-4 py-3 bg-brand-card border border-brand-border rounded-xl text-sm hover:bg-brand-sidebar transition-all">
+                                    <i data-lucide="upload" class="w-4 h-4"></i>
+                                    Import CSV
+                                </button>
+                            </div>
+                            <input type="file" id="import-csv-input" class="hidden" accept=".csv">
+                            <button id="clear-all-btn" class="w-full py-3 bg-red-900/20 text-red-400 border border-red-500/30 rounded-xl text-sm hover:bg-red-900/40 transition-all font-medium">
+                                Clear All Data
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Add/Edit Modal Drawer -->
+    <div id="overlay" class="overlay"></div>
+    <div id="drawer" class="drawer">
+        <div class="p-6 h-full flex flex-col overflow-y-auto">
+            <div class="flex items-center justify-between mb-8">
+                <h3 id="drawer-title" class="text-xl font-bold">Add Prospect</h3>
+                <button id="close-drawer" class="p-2 hover:bg-brand-card rounded-lg"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+
+            <form id="prospect-form" class="space-y-8 flex-1">
+                <input type="hidden" id="form-id">
+                
+                <!-- Basic Info -->
+                <section class="space-y-4">
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-widest border-b border-brand-border pb-2">Basic Info</h4>
+                    <div class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Full Name or Brand Name *</label>
+                            <input type="text" id="form-name" required class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Instagram Handle *</label>
+                            <div class="relative">
+                                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-brand-muted">@</span>
+                                <input type="text" id="form-handle" required class="w-full bg-brand-card border border-brand-border rounded-lg pl-8 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium">Platform *</label>
+                                <select id="form-platform" required class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                                    <option value="Instagram">Instagram</option>
+                                    <option value="LinkedIn">LinkedIn</option>
+                                    <option value="Email">Email</option>
+                                    <option value="WhatsApp">WhatsApp</option>
+                                    <option value="TikTok">TikTok</option>
+                                </select>
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium">Follower Count</label>
+                                <input type="number" id="form-followers" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                            </div>
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Niche</label>
+                            <input type="text" id="form-niche" list="niche-options" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                            <datalist id="niche-options">
+                                <option value="Fitness">
+                                <option value="Finance">
+                                <option value="Health">
+                                <option value="Lifestyle">
+                                <option value="Business">
+                                <option value="Food">
+                                <option value="Beauty">
+                                <option value="Tech">
+                                <option value="Education">
+                                </datalist>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Contact Details -->
+                <section class="space-y-4">
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-widest border-b border-brand-border pb-2">Contact Details</h4>
+                    <div class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Email Address</label>
+                            <input type="email" id="form-email" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Website URL</label>
+                            <input type="url" id="form-website" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Outreach Details -->
+                <section class="space-y-4">
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-widest border-b border-brand-border pb-2">Outreach Details</h4>
+                    <div class="space-y-4">
+                        <div class="space-y-1">
+                            <label class="text-sm font-medium">Template Used</label>
+                            <select id="form-template" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                                <option value="Template 1">Template 1</option>
+                                <option value="Template 2">Template 2</option>
+                                <option value="Template 3">Template 3</option>
+                                <option value="Template 4">Template 4</option>
+                                <option value="Custom Email">Custom Email</option>
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium">Date Pitched *</label>
+                                <input type="date" id="form-date" required class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-sm font-medium">Status *</label>
+                                <select id="form-status" required class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none">
+                                    <option value="Cold">🔵 Cold</option>
+                                    <option value="Replied">🟡 Replied</option>
+                                    <option value="Sample Sent">🟠 Sample Sent</option>
+                                    <option value="Call Booked">🟣 Call Booked</option>
+                                    <option value="Paid">🟢 Paid</option>
+                                    <option value="Dead">🔴 Dead</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between bg-brand-card/50 p-4 rounded-xl border border-brand-border">
+                            <div class="space-y-0.5">
+                                <label class="text-sm font-medium">Followed Up</label>
+                                <p class="text-xs text-brand-muted">Did you send a reminder?</p>
+                            </div>
+                            <input type="checkbox" id="form-followed-up" class="w-5 h-5 accent-brand-accent">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notes -->
+                <section class="space-y-4 pb-20">
+                    <h4 class="text-xs font-bold text-brand-muted uppercase tracking-widest border-b border-brand-border pb-2">Notes</h4>
+                    <div class="space-y-1">
+                        <textarea id="form-notes" maxlength="500" class="w-full bg-brand-card border border-brand-border rounded-lg px-4 py-2.5 text-sm focus:outline-none min-h-[120px]"></textarea>
+                        <p class="text-right text-[10px] text-brand-muted"><span id="note-char-count">0</span>/500</p>
+                    </div>
+                </section>
+
+                <!-- Footer Actions -->
+                <div class="fixed bottom-0 right-0 left-0 md:left-auto md:w-full md:max-w-md p-6 bg-brand-sidebar border-t border-brand-border flex gap-3 z-10">
+                    <button type="submit" id="save-prospect-btn" class="flex-1 py-3 bg-brand-accent text-white font-bold rounded-xl hover:opacity-90 transition-opacity">Save Prospect</button>
+                    <button type="button" id="save-add-another-btn" class="flex-1 py-3 bg-brand-card border border-brand-border text-white font-bold rounded-xl hover:bg-brand-sidebar transition-all">Save & Add Another</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Add Button -->
+    <button id="floating-add-btn" class="fixed bottom-8 right-8 w-16 h-16 bg-brand-accent text-white rounded-full shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 hidden">
+        <i data-lucide="plus" class="w-8 h-8"></i>
+    </button>
+
+    <!-- Toasts -->
+    <div id="toast-container" class="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] space-y-2 pointer-events-none"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="/src/js/ui.js"></script>
+</body>
+</html>

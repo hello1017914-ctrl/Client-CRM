@@ -1,11 +1,34 @@
-<div align="center">
+# CopyQuill CRM
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A premium personal outreach tracker for AI copywriting freelancers.
 
-  <h1>Built with AI Studio</h2>
+## Features
+- Real-time Firestore database integration
+- Google Authentication
+- Interactive Dashboard with Chart.js
+- Prospect Management (CRUD + Bulk Actions)
+- Follow-up Queue with urgency tracking
+- Weekly Performance Reviews
+- CSV Import/Export
+- Offline Persistence
+- Dark Emerald Aesthetic
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Setup
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+1. **Firebase Project**:
+   - Create a new project at [Firebase Console](https://console.firebase.google.com/).
+   - Enable **Firestore Database** and **Authentication** (Google login).
+   - In Firestore settings, use the provided `firestore.rules` for security.
+   - Register a Web App and copy the config.
 
-</div>
+2. **Configuration**:
+   - Update `src/js/firebase.js` with your Firebase configuration keys.
+
+3. **Deployment**:
+   - Run `npm run build` to generate the production files in the `dist` folder.
+   - Drag and drop the `dist` folder into [Netlify](https://app.netlify.com/drop) for instant deployment.
+
+## Keyboard Shortcuts
+- `N`: New prospect
+- `F`: Go to follow up queue
+- `/`: Focus search bar
