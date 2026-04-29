@@ -1,4 +1,3 @@
-import { initAuth } from './auth.js';
 import { 
     subscribeToProspects, 
     addProspect, 
@@ -9,24 +8,23 @@ import {
     clearAllProspects
 } from './prospects.js';
 import { updateDashboard } from './dashboard.js';
-import { db, collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from './firebase.js';
+import { storage } from './storage.js';
 
 let allProspects = [];
-let currentUser = null;
 let currentPage = 1;
 const rowsPerPage = 20;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
     lucide.createIcons();
-    initAuth((user) => {
-        currentUser = user;
-        subscribeToProspects(user.uid, (prospects) => {
-            allProspects = prospects;
-            renderAll();
-        });
-        loadWeeklyReviews();
+    
+    // No auth needed, just start
+    subscribeToProspects(null, (prospects) => {
+        allProspects = prospects;
+        renderAll();
     });
+    
+    loadWeeklyReviews();
 
     setupNavigation();
     setupDrawer();
@@ -115,7 +113,6 @@ function setupDrawer() {
         const saveAddAnother = e.submitter.id === 'save-add-another-btn';
         
         const data = {
-            userId: currentUser.uid,
             name: document.getElementById('form-name').value,
             instagramHandle: document.getElementById('form-handle').value.replace('@', ''),
             platform: document.getElementById('form-platform').value,
@@ -416,10 +413,7 @@ window.handleFollowUpAction = async (id, isFollowedUp) => {
 
 // WEEKLY REVIEW
 async function loadWeeklyReviews() {
-    const q = query(collection(db, 'weeklyReviews'), where('userId', '==', currentUser.uid), orderBy('weekStartDate', 'desc'));
-    const snap = await getDocs(q);
-    const reviews = [];
-    snap.forEach(doc => reviews.push({ id: doc.id, ...doc.data() }));
+    const reviews = storage.reviews.getAll();
     renderReviewHistory(reviews);
 }
 
@@ -427,7 +421,6 @@ function setupWeeklyReview() {
     const btn = document.getElementById('save-review-btn');
     btn.addEventListener('click', async () => {
         const data = {
-            userId: currentUser.uid,
             weekStartDate: getMonday(new Date()).toISOString().split('T')[0],
             dmsSent: Number(document.getElementById('rev-dms').value) || 0,
             repliesReceived: Number(document.getElementById('rev-replies').value) || 0,
@@ -437,11 +430,13 @@ function setupWeeklyReview() {
             whatWorked: document.getElementById('rev-worked').value,
             whatDidnt: document.getElementById('rev-didnt').value,
             nextWeekTarget: Number(document.getElementById('rev-target').value) || 0,
-            createdAt: serverTimestamp()
+            createdAt: new Date().toISOString()
         };
 
         try {
-            await addDoc(collection(db, 'weeklyReviews'), data);
+            const reviews = storage.reviews.getAll();
+            reviews.unshift(data); // Add to front
+            storage.reviews.saveAll(reviews);
             showToast('Review saved ✓');
             loadWeeklyReviews();
         } catch (err) {
@@ -500,7 +495,7 @@ async function setupSettings() {
 
     clearBtn.addEventListener('click', async () => {
         if (confirm('DANGER: This will delete ALL your prospects. This cannot be undone. Proceed?')) {
-            await clearAllProspects(currentUser.uid, allProspects);
+            await clearAllProspects();
             showToast('All data cleared');
         }
     });
@@ -547,7 +542,6 @@ async function handleCSVImport(file) {
             if (!lines[i].trim()) continue;
             const values = lines[i].split(',');
             const data = {
-                userId: currentUser.uid,
                 name: values[0],
                 instagramHandle: values[1],
                 platform: values[2],

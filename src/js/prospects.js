@@ -1,84 +1,83 @@
-import { 
-    db, 
-    collection, 
-    addDoc, 
-    updateDoc, 
-    deleteDoc, 
-    doc, 
-    query, 
-    where, 
-    orderBy, 
-    onSnapshot,
-    serverTimestamp,
-    writeBatch
-} from './firebase.js';
+import { storage } from './storage.js';
 
-let unsubscribeProspects = null;
+let prospectListeners = [];
 
 export function subscribeToProspects(userId, callback) {
-    if (unsubscribeProspects) unsubscribeProspects();
+    // In local storage mode, we don't need userId as it's personal to the browser
+    const prospects = storage.prospects.getAll();
+    callback(prospects);
+    
+    prospectListeners.push(callback);
+    
+    return () => {
+        prospectListeners = prospectListeners.filter(l => l !== callback);
+    };
+}
 
-    const q = query(
-        collection(db, 'prospects'),
-        where('userId', '==', userId),
-        orderBy('datePitched', 'desc')
-    );
-
-    unsubscribeProspects = onSnapshot(q, (snapshot) => {
-        const prospects = [];
-        snapshot.forEach((doc) => {
-            prospects.push({ id: doc.id, ...doc.data() });
-        });
-        callback(prospects);
-    }, (error) => {
-        console.error('Prospects subscription error:', error);
-    });
+function notifyListeners() {
+    const prospects = storage.prospects.getAll();
+    prospectListeners.forEach(callback => callback(prospects));
 }
 
 export async function addProspect(data) {
-    return await addDoc(collection(db, 'prospects'), {
+    const prospects = storage.prospects.getAll();
+    const newProspect = {
         ...data,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-    });
+        id: Math.random().toString(36).substr(2, 9),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+    };
+    prospects.push(newProspect);
+    storage.prospects.saveAll(prospects);
+    notifyListeners();
+    return newProspect;
 }
 
 export async function updateProspect(id, data) {
-    const prospectRef = doc(db, 'prospects', id);
-    return await updateDoc(prospectRef, {
-        ...data,
-        updatedAt: serverTimestamp()
-    });
+    const prospects = storage.prospects.getAll();
+    const index = prospects.findIndex(p => p.id === id);
+    if (index !== -1) {
+        prospects[index] = {
+            ...prospects[index],
+            ...data,
+            updatedAt: new Date().toISOString()
+        };
+        storage.prospects.saveAll(prospects);
+        notifyListeners();
+    }
 }
 
 export async function deleteProspect(id) {
-    return await deleteDoc(doc(db, 'prospects', id));
+    const prospects = storage.prospects.getAll();
+    const filtered = prospects.filter(p => p.id !== id);
+    storage.prospects.saveAll(filtered);
+    notifyListeners();
 }
 
 export async function bulkUpdateFollowedUp(ids, followedUp) {
-    const batch = writeBatch(db);
+    const prospects = storage.prospects.getAll();
     ids.forEach(id => {
-        const ref = doc(db, 'prospects', id);
-        batch.update(ref, { followedUp, updatedAt: serverTimestamp() });
+        const index = prospects.findIndex(p => p.id === id);
+        if (index !== -1) {
+            prospects[index] = {
+                ...prospects[index],
+                followedUp,
+                updatedAt: new Date().toISOString()
+            };
+        }
     });
-    return await batch.commit();
+    storage.prospects.saveAll(prospects);
+    notifyListeners();
 }
 
 export async function bulkDeleteProspects(ids) {
-    const batch = writeBatch(db);
-    ids.forEach(id => {
-        const ref = doc(db, 'prospects', id);
-        batch.delete(ref);
-    });
-    return await batch.commit();
+    const prospects = storage.prospects.getAll();
+    const filtered = prospects.filter(p => !ids.includes(p.id));
+    storage.prospects.saveAll(filtered);
+    notifyListeners();
 }
 
-export async function clearAllProspects(userId, prospects) {
-    const batch = writeBatch(db);
-    prospects.forEach(p => {
-        if (p.userId === userId) {
-            batch.delete(doc(db, 'prospects', p.id));
-        }
-    });
-    return await batch.commit();
+export async function clearAllProspects() {
+    storage.prospects.saveAll([]);
+    notifyListeners();
 }

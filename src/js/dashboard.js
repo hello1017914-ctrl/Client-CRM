@@ -125,8 +125,8 @@ function renderRecentActivity(prospects) {
     const list = document.getElementById('recent-activity-list');
     const recent = [...prospects]
         .sort((a, b) => {
-            const dateA = a.updatedAt?.toMillis() || 0;
-            const dateB = b.updatedAt?.toMillis() || 0;
+            const dateA = new Date(a.updatedAt).getTime() || 0;
+            const dateB = new Date(b.updatedAt).getTime() || 0;
             return dateB - dateA;
         })
         .slice(0, 5);
