@@ -8,7 +8,7 @@ import {
     clearAllProspects
 } from './prospects.js';
 import { updateDashboard } from './dashboard.js';
-import { storage } from './storage.js';
+import { supabase } from './supabaseClient.js';
 
 let allProspects = [];
 let currentPage = 1;
@@ -413,33 +413,55 @@ window.handleFollowUpAction = async (id, isFollowedUp) => {
 
 // WEEKLY REVIEW
 async function loadWeeklyReviews() {
-    const reviews = storage.reviews.getAll();
-    renderReviewHistory(reviews);
+    const { data: reviews, error } = await supabase
+        .from('weekly_reviews')
+        .select('*')
+        .order('week_start_date', { ascending: false });
+
+    if (!error) {
+        // Map snake_case to camelCase for the UI if needed, 
+        // or just ensure UI uses the right fields.
+        // The renderReviewHistory expects camelCase based on original code.
+        const mappedReviews = reviews.map(r => ({
+            weekStartDate: r.week_start_date,
+            dmsSent: r.dms_sent,
+            repliesReceived: r.replies_received,
+            samplesSent: r.samples_sent,
+            clientsConverted: r.clients_converted,
+            revenue: r.revenue_earned,
+            whatWorked: r.what_worked,
+            whatDidnt: r.what_didnt,
+            nextWeekTarget: r.next_week_target,
+            createdAt: r.created_at
+        }));
+        renderReviewHistory(mappedReviews);
+    }
 }
 
 function setupWeeklyReview() {
     const btn = document.getElementById('save-review-btn');
     btn.addEventListener('click', async () => {
         const data = {
-            weekStartDate: getMonday(new Date()).toISOString().split('T')[0],
-            dmsSent: Number(document.getElementById('rev-dms').value) || 0,
-            repliesReceived: Number(document.getElementById('rev-replies').value) || 0,
-            samplesSent: Number(document.getElementById('rev-samples').value) || 0,
-            clientsConverted: Number(document.getElementById('rev-clients').value) || 0,
-            revenue: Number(document.getElementById('rev-revenue').value) || 0,
-            whatWorked: document.getElementById('rev-worked').value,
-            whatDidnt: document.getElementById('rev-didnt').value,
-            nextWeekTarget: Number(document.getElementById('rev-target').value) || 0,
-            createdAt: new Date().toISOString()
+            week_start_date: getMonday(new Date()).toISOString().split('T')[0],
+            dms_sent: Number(document.getElementById('rev-dms').value) || 0,
+            replies_received: Number(document.getElementById('rev-replies').value) || 0,
+            samples_sent: Number(document.getElementById('rev-samples').value) || 0,
+            clients_converted: Number(document.getElementById('rev-clients').value) || 0,
+            revenue_earned: Number(document.getElementById('rev-revenue').value) || 0,
+            what_worked: document.getElementById('rev-worked').value,
+            what_didnt: document.getElementById('rev-didnt').value,
+            next_week_target: Number(document.getElementById('rev-target').value) || 0,
+            created_at: new Date().toISOString()
         };
 
         try {
-            const reviews = storage.reviews.getAll();
-            reviews.unshift(data); // Add to front
-            storage.reviews.saveAll(reviews);
+            const { error } = await supabase.from('weekly_reviews').insert([data]);
+            if (error) throw error;
+            
             showToast('Review saved ✓');
             loadWeeklyReviews();
         } catch (err) {
+            console.error(err);
             showToast('Error saving review', 'error');
         }
     });
